@@ -1,17 +1,29 @@
 language: rust
+sudo: required
 cache: cargo
 dist: trusty
 os:
   - linux
 
+addons:
+  apt:
+    packages:
+      - libssl-dev
+
 # Run builds for all the supported trains
 rust:
   - nightly
 
-sudo: true
+matrix:
+  allow_failures:
+    - rust: nightly
 
-# The main build
 script:
+  - cargo clean
   - cargo build
   - cargo test
 
+after_success: |
+  RUSTFLAGS="--cfg procmacro2_semver_exempt" cargo install cargo-tarpaulin
+  cargo tarpaulin --out Xml
+  bash <(curl -s https://codecov.io/bash)
